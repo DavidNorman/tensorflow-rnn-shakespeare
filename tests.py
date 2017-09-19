@@ -133,23 +133,3 @@ class EncodingTest(unittest.TestCase):
                              "character and should be encoded and decoded as 0.")
 
 
-class TxtProgressTest(unittest.TestCase):
-    def test_progress_indicator(self):
-        print("If the printed output of this test is incorrect, the test will fail. No need to check visually.", end='')
-        test_cases = (50, 51, 49, 1, 2, 3, 1000, 333, 101)
-        p = txt.Progress(100)
-        for maxi in test_cases:
-            m, cent = self.check_progress_indicator(p, maxi)
-            self.assertEqual(m, maxi, msg="Incorrect number of steps.")
-            self.assertEqual(cent, 100, msg="Incorrect number of steps.")
-
-    @staticmethod
-    def check_progress_indicator(p, maxi):
-        p._Progress__print_header()
-        progress = p._Progress__start_progress(maxi)
-        total = 0
-        n = 0
-        for k in progress():
-            total += k
-            n += 1
-        return n, total

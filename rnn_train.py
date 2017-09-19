@@ -125,7 +125,6 @@ saver = tf.train.Saver(max_to_keep=1000)
 # for display: init the progress bar
 DISPLAY_FREQ = 50
 _50_BATCHES = DISPLAY_FREQ * BATCHSIZE * SEQLEN
-progress = txt.Progress(DISPLAY_FREQ, size=111+2, msg="Training on next "+str(DISPLAY_FREQ)+" batches")
 
 # init
 istate = np.zeros([BATCHSIZE, INTERNALSIZE*NLAYERS])  # initial zero input state
@@ -152,7 +151,7 @@ for x, y_, epoch in txt.rnn_minibatch_sequencer(codetext, BATCHSIZE, SEQLEN, nb_
     # The validation text should be a single sequence but that's too slow (1s per 1024 chars!),
     # so we cut it up and batch the pieces (slightly inaccurate)
     # tested: validating with 5K sequences instead of 1K is only slightly more accurate, but a lot slower.
-    if step % _50_BATCHES == 0 and len(valitext) > 0:
+    if step // 3 % _50_BATCHES == 0 and len(valitext) > 0:
         VALI_SEQLEN = 1*1024  # Sequence length for validation. State will be wrong at the start of each sequence.
         bsize = len(valitext) // VALI_SEQLEN
         txt.print_validation_header(len(codetext), bookranges)
@@ -166,7 +165,7 @@ for x, y_, epoch in txt.rnn_minibatch_sequencer(codetext, BATCHSIZE, SEQLEN, nb_
         validation_writer.add_summary(smm, step)
 
     # display a short text generated with the current weights and biases (every 150 batches)
-    if step // 3 % _50_BATCHES == 0:
+    if step // 12 % _50_BATCHES == 0:
         txt.print_text_generation_header()
         ry = np.array([[txt.convert_from_alphabet(ord("K"))]])
         rh = np.zeros([1, INTERNALSIZE * NLAYERS])
@@ -182,32 +181,9 @@ for x, y_, epoch in txt.rnn_minibatch_sequencer(codetext, BATCHSIZE, SEQLEN, nb_
         saved_file = saver.save(sess, 'checkpoints/rnn_train_' + timestamp, global_step=step)
         print("Saved file: " + saved_file)
 
-    # display progress bar
-    progress.step(reset=step % _50_BATCHES == 0)
+    print "Step " + str(step // (BATCHSIZE * SEQLEN)) + " complete"
 
     # loop state around
     istate = ostate
     step += BATCHSIZE * SEQLEN
 
-# all runs: SEQLEN = 30, BATCHSIZE = 100, ALPHASIZE = 98, INTERNALSIZE = 512, NLAYERS = 3
-# run 1477669632 decaying learning rate 0.001-0.0001-1e7 dropout 0.5: not good
-# run 1477670023 lr=0.001 no dropout: very good
-
-# Tensorflow runs:
-# 1485434262
-#   trained on shakespeare/t*.txt only. Validation on 1K sequences
-#   validation loss goes up from step 5M (overfitting because of small dataset)
-# 1485436038
-#   trained on shakespeare/t*.txt only. Validation on 5K sequences
-#   On 5K sequences validation accuracy is slightly higher and loss slightly lower
-#   => sequence breaks do introduce inaccuracies but the effect is small
-# 1485437956
-#   Trained on shakespeare/*.txt. Validation on 1K sequences
-#   On this much larger dataset, validation loss still decreasing after 6 epochs (step 35M)
-# 1495447371
-#   Trained on shakespeare/*.txt no dropout, 30 epochs
-#   Validation loss starts going up after 10 epochs (overfitting)
-# 1495440473
-#   Trained on shakespeare/*.txt "naive dropout" pkeep=0.8, 30 epochs
-#   Dropout brings the validation loss under control, preventing it from
-#   going up but the effect is small.
