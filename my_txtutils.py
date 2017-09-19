@@ -181,58 +181,6 @@ def print_learning_learned_comparison(X, Y, losses, bookranges, batch_loss, batc
     print("TRAINING STATS: {}".format(stats))
 
 
-class Progress:
-    """Text mode progress bar.
-    Usage:
-            p = Progress(30)
-            p.step()
-            p.step()
-            p.step(start=True) # to restart form 0%
-    The progress bar displays a new header at each restart."""
-    def __init__(self, maxi, size=100, msg=""):
-        """
-        :param maxi: the number of steps required to reach 100%
-        :param size: the number of characters taken on the screen by the progress bar
-        :param msg: the message displayed in the header of the progress bat
-        """
-        self.maxi = maxi
-        self.p = self.__start_progress(maxi)()  # () to get the iterator from the generator
-        self.header_printed = False
-        self.msg = msg
-        self.size = size
-
-    def step(self, reset=False):
-        if reset:
-            self.__init__(self.maxi, self.size, self.msg)
-        if not self.header_printed:
-            self.__print_header()
-        next(self.p)
-
-    def __print_header(self):
-        print()
-        format_string = "0%{: ^" + str(self.size - 6) + "}100%"
-        print(format_string.format(self.msg))
-        self.header_printed = True
-
-    def __start_progress(self, maxi):
-        def print_progress():
-            # Bresenham's algorithm. Yields the number of dots printed.
-            # This will always print 100 dots in max invocations.
-            dx = maxi
-            dy = self.size
-            d = dy - dx
-            for x in range(maxi):
-                k = 0
-                while d >= 0:
-                    print('=')
-                    k += 1
-                    d -= dx
-                d += dy
-                yield k
-
-        return print_progress
-
-
 def read_data_files(directory, validation=True):
     """Read data files according to the specified glob pattern
     Optionnaly set aside the last file as validation data.
