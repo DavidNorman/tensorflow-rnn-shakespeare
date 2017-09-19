@@ -67,7 +67,7 @@ with tf.Session() as sess:
         c = my_txtutils.sample_from_probabilities(yo, topn=2)
         y = np.array([[c]])  # shape [BATCHSIZE, SEQLEN] with BATCHSIZE=1 and SEQLEN=1
         c = chr(my_txtutils.convert_to_alphabet(c))
-        print(c, end="")
+        print(c)
 
         if c == '\n':
             ncnt = 0
